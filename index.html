@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Health Detection System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .symptom-input-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-add {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-add:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .btn-analyze {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            font-size: 1.2em;
+            margin-top: 20px;
+        }
+
+        .btn-analyze:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-analyze:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .symptoms-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+            min-height: 50px;
+        }
+
+        .symptom-tag {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95em;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .symptom-tag button {
+            background: rgba(255, 255, 255, 0.3);
+            border: none;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .symptom-tag button:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .results {
+            margin-top: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border-left: 5px solid #667eea;
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .results h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .results-content {
+            color: #555;
+            line-height: 1.8;
+            font-size: 1.05em;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .warning {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 8px;
+            color: #856404;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #999;
+            padding: 20px;
+            font-style: italic;
+        }
+
+        .quick-symptoms {
+            margin: 20px 0;
+        }
+
+        .quick-symptoms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .quick-symptom-btn {
+            padding: 10px 15px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9em;
+            text-align: center;
+            color: #555;
+        }
+
+        .quick-symptom-btn:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+            transform: translateY(-2px);
+        }
+
+        .quick-symptom-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .additional-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        select {
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            background: white;
+            cursor: pointer;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        @media (max-width: 600px) {
+            .additional-inputs {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏥 AI Health Detection</h1>
+            <p>Advanced symptom analysis powered by AI</p>
+        </div>
+
+        <div class="content">
+            <div class="input-section">
+                <div class="input-group">
+                    <label for="symptomInput">Enter Your Symptoms:</label>
+                    <div class="symptom-input-container">
+                        <input 
+                            type="text" 
+                            id="symptomInput" 
+                            placeholder="e.g., headache, fever, cough..."
+                            onkeypress="handleKeyPress(event)"
+                        >
+                        <button class="btn btn-add" onclick="addSymptom()">Add</button>
+                    </div>
+                </div>
+
+                <div class="quick-symptoms">
+                    <label style="margin-bottom: 10px; display: block;">Quick Add Common Symptoms:</label>
+                    <div class="quick-symptoms-grid" id="quickSymptoms"></div>
+                </div>
+
+                <div class="symptoms-list" id="symptomsList">
+                    <div class="empty-state">No symptoms added yet. Start by adding your symptoms above.</div>
+                </div>
+
+                <div class="additional-inputs">
+                    <div class="input-group">
+                        <label for="ageInput">Age:</label>
+                        <input type="text" id="ageInput" placeholder="Enter age (optional)">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="genderInput">Gender:</label>
+                        <select id="genderInput">
+                            <option value="">Select (optional)</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="durationInput">Duration:</label>
+                        <input type="text" id="durationInput" placeholder="e.g., 3 days (optional)">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="severityInput">Severity:</label>
+                        <select id="severityInput">
+                            <option value="">Select (optional)</option>
+                            <option value="mild">Mild</option>
+                            <option value="moderate">Moderate</option>
+                            <option value="severe">Severe</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button class="btn btn-analyze" onclick="analyzeSymptoms()" id="analyzeBtn">
+                    🔍 Analyze Symptoms
+                </button>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Analyzing your symptoms with AI...</p>
+            </div>
+
+            <div class="results" id="results">
+                <h2>📋 Analysis Results</h2>
+                <div class="results-content" id="resultsContent"></div>
+            </div>
+
+            <div class="warning">
+                <strong>⚠️ Medical Disclaimer:</strong> This is an AI-powered tool for educational purposes only. It is not a substitute for professional medical advice, diagnosis, or treatment. Always consult a qualified healthcare provider for medical concerns.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let symptoms = [];
+
+        // Common symptoms database organized by category
+        const commonSymptoms = [
+            // General
+            { name: 'Fever', icon: '🌡️' },
+            { name: 'Fatigue', icon: '😴' },
+            { name: 'Weakness', icon: '💪' },
+            { name: 'Chills', icon: '🥶' },
+            { name: 'Night Sweats', icon: '💦' },
+            
+            // Respiratory
+            { name: 'Cough', icon: '😷' },
+            { name: 'Shortness of Breath', icon: '🫁' },
+            { name: 'Sore Throat', icon: '🗣️' },
+            { name: 'Runny Nose', icon: '👃' },
+            { name: 'Chest Pain', icon: '💔' },
+            
+            // Head & Neurological
+            { name: 'Headache', icon: '🤕' },
+            { name: 'Dizziness', icon: '😵' },
+            { name: 'Confusion', icon: '🤔' },
+            { name: 'Loss of Smell', icon: '👃' },
+            { name: 'Loss of Taste', icon: '👅' },
+            
+            // Digestive
+            { name: 'Nausea', icon: '🤢' },
+            { name: 'Vomiting', icon: '🤮' },
+            { name: 'Diarrhea', icon: '🚽' },
+            { name: 'Abdominal Pain', icon: '🤰' },
+            { name: 'Loss of Appetite', icon: '🍽️' },
+            
+            // Musculoskeletal
+            { name: 'Muscle Pain', icon: '💪' },
+            { name: 'Joint Pain', icon: '🦴' },
+            { name: 'Back Pain', icon: '🧍' },
+            { name: 'Stiffness', icon: '🚶' },
+            
+            // Skin
+            { name: 'Rash', icon: '🔴' },
+            { name: 'Itching', icon: '✋' },
+            { name: 'Swelling', icon: '🎈' },
+            { name: 'Pale Skin', icon: '👻' },
+            
+            // Other
+            { name: 'Difficulty Sleeping', icon: '🛏️' },
+            { name: 'Increased Thirst', icon: '💧' },
+            { name: 'Frequent Urination', icon: '🚻' },
+            { name: 'Blurred Vision', icon: '👁️' }
+        ];
+
+        // Initialize quick symptoms on page load
+        window.onload = function() {
+            renderQuickSymptoms();
+        };
+
+        function renderQuickSymptoms() {
+            const container = document.getElementById('quickSymptoms');
+            container.innerHTML = commonSymptoms.map(symptom => `
+                <button class="quick-symptom-btn" onclick="toggleQuickSymptom('${symptom.name.toLowerCase()}', this)">
+                    ${symptom.icon} ${symptom.name}
+                </button>
+            `).join('');
+        }
+
+        function toggleQuickSymptom(symptom, button) {
+            if (symptoms.includes(symptom)) {
+                removeSymptom(symptom);
+                button.classList.remove('active');
+            } else {
+                symptoms.push(symptom);
+                button.classList.add('active');
+                renderSymptoms();
+            }
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                addSymptom();
+            }
+        }
+
+        function addSymptom() {
+            const input = document.getElementById('symptomInput');
+            const symptom = input.value.trim();
+
+            if (symptom && !symptoms.includes(symptom.toLowerCase())) {
+                symptoms.push(symptom.toLowerCase());
+                input.value = '';
+                renderSymptoms();
+            }
+        }
+
+        function removeSymptom(symptom) {
+            symptoms = symptoms.filter(s => s !== symptom);
+            renderSymptoms();
+            updateQuickSymptomButtons();
+        }
+
+        function updateQuickSymptomButtons() {
+            const buttons = document.querySelectorAll('.quick-symptom-btn');
+            buttons.forEach(button => {
+                const buttonText = button.textContent.trim().split(' ').slice(1).join(' ').toLowerCase();
+                if (symptoms.includes(buttonText)) {
+                    button.classList.add('active');
+                } else {
+                    button.classList.remove('active');
+                }
+            });
+        }
+
+        function renderSymptoms() {
+            const list = document.getElementById('symptomsList');
+            
+            if (symptoms.length === 0) {
+                list.innerHTML = '<div class="empty-state">No symptoms added yet. Start by adding your symptoms above.</div>';
+                return;
+            }
+
+            list.innerHTML = symptoms.map(symptom => `
+                <div class="symptom-tag">
+                    ${symptom}
+                    <button onclick="removeSymptom('${symptom}')">×</button>
+                </div>
+            `).join('');
+        }
+
+        async function analyzeSymptoms() {
+            if (symptoms.length === 0) {
+                alert('Please add at least one symptom before analyzing.');
+                return;
+            }
+
+            const age = document.getElementById('ageInput').value.trim();
+            const gender = document.getElementById('genderInput').value;
+            const duration = document.getElementById('durationInput').value.trim();
+            const severity = document.getElementById('severityInput').value;
+
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('results');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+
+            loading.classList.add('show');
+            results.classList.remove('show');
+            analyzeBtn.disabled = true;
+
+            try {
+                let prompt = `You are a medical AI assistant. Based on the following symptoms and patient information, provide a detailed health analysis:
+
+Symptoms: ${symptoms.join(', ')}`;
+
+                if (age) prompt += `\nAge: ${age}`;
+                if (gender) prompt += `\nGender: ${gender}`;
+                if (duration) prompt += `\nDuration: ${duration}`;
+                if (severity) prompt += `\nSeverity: ${severity}`;
+
+                prompt += `\n\nPlease provide:
+1. Possible conditions or diseases (list 3-5 most likely)
+2. Brief explanation of each condition
+3. Recommended next steps
+4. Warning signs that require immediate medical attention
+5. General care recommendations
+
+Format your response in a clear, organized way. Remember this is for educational purposes and the user should consult a healthcare professional.`;
+
+                const response = await fetch("https://api.anthropic.com/v1/messages", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        model: "claude-sonnet-4-20250514",
+                        max_tokens: 1000,
+                        messages: [
+                            { role: "user", content: prompt }
+                        ],
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.content && data.content[0] && data.content[0].text) {
+                    const analysisText = data.content[0].text;
+                    displayResults(analysisText);
+                } else {
+                    throw new Error('Invalid response from AI');
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('resultsContent').innerHTML = 
+                    '<p style="color: #d32f2f;">❌ An error occurred during analysis. Please try again.</p>';
+                results.classList.add('show');
+            } finally {
+                loading.classList.remove('show');
+                analyzeBtn.disabled = false;
+            }
+        }
+
+        function displayResults(text) {
+            const resultsContent = document.getElementById('resultsContent');
+            const results = document.getElementById('results');
+            
+            // Format the text with proper HTML
+            const formattedText = text
+                .replace(/\n\n/g, '</p><p>')
+                .replace(/\n/g, '<br>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>');
+            
+            resultsContent.innerHTML = `<p>${formattedText}</p>`;
+            results.classList.add('show');
+            
+            // Scroll to results
+            results.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    </script>
+</body>
+</html>
